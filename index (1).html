@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>M. M. Public School Mundeshwari</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+body {margin:0; font-family: Arial, sans-serif; background:#f0f4f8;}
+header {background:#004080; color:#fff; display:flex; align-items:center; padding:10px 20px; position:sticky; top:0; z-index:100;}
+header img {height:50px; margin-right:15px;}
+header h1 {font-size:24px; margin:0;}
+
+/* Notices */
+.notice-container {overflow:hidden; white-space:nowrap; padding:8px; background:#fffae6; border-bottom:2px solid #ccc; font-weight:bold;}
+.notice-new {color:red; margin-right:10px;}
+.notice-track {display:inline-block; padding-left:100%; animation:scroll 25s linear infinite;}
+.notice-track2 {display:inline-block; padding-left:100%; animation:scroll 30s linear infinite; margin-top:5px;}
+@keyframes scroll {0%{transform:translateX(0);} 100%{transform:translateX(-100%);}}
+
+section {padding:30px 20px; text-align:center;}
+h2 {color:#004080; margin-bottom:20px;}
+input {padding:10px; margin:5px; width:280px; max-width:90%; border:1px solid #ccc; border-radius:5px;}
+button {padding:12px 25px; margin:10px; background:#004080; color:#fff; border:none; cursor:pointer; border-radius:6px; font-size:16px;}
+button:hover {background:#0066cc;}
+.card {border:1px solid #ccc; padding:20px; margin:20px auto; max-width:420px; background:#fff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.about {background:#004080; color:#fff; padding:40px; text-align:center; border-top:5px solid #fff;}
+.error {color:red; font-weight:bold;}
+.success {color:green; font-weight:bold;}
+.admin-login, .admin {background:#eaf0f9; padding:20px; margin:20px; border:1px solid #ccc; border-radius:8px; text-align:center; max-width:450px; margin-left:auto; margin-right:auto;}
+.admin-login input {margin-bottom:10px;}
+.logout-btn {background:#cc0000;}
+.remove-btn {background:#cc5500;}
+@media(max-width:600px){header h1{font-size:18px;} header img{height:40px;} input{width:90%;}}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://via.placeholder.com/50x50.png?text=Logo" alt="School Logo">
+  <h1>M. M. Public School Mundeshwari</h1>
+</header>
+
+<!-- Notices -->
+<div class="notice-container">
+  <span class="notice-new">NEW</span>
+  <div class="notice-track">📢  check your result</div>
+  <div class="notice-track2">📚 download your admit card</div>
+</div>
+
+<!-- Result Section -->
+<section>
+<h2>Check Result</h2>
+<input type="text" id="studentName" placeholder="Enter Student Name"><br>
+<input type="text" id="rollNumber" placeholder="Enter Roll Number"><br>
+<button onclick="checkResult()">Check Result</button>
+<div id="resultBox"></div>
+</section>
+
+<!-- Admit Card Section -->
+<section>
+<h2>Download Admit Card</h2>
+<input type="text" id="admitName" placeholder="Enter Student Name"><br>
+<input type="text" id="admitRoll" placeholder="Enter Roll Number"><br>
+<button onclick="downloadAdmit()">Download Admit Card</button>
+<div id="admitBox"></div>
+</section>
+
+<!-- Admin Login -->
+<div class="admin-login" id="adminLoginDiv">
+<h3 style="color:#004080;">Admin Login</h3>
+<input type="text" id="loginUser" placeholder="Username"><br>
+<input type="password" id="loginPass" placeholder="Password"><br>
+<button onclick="loginAdmin()">Login</button>
+<p id="loginMsg"></p>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin" id="adminPanel" style="display:none;">
+<h3 style="color:#004080;">Admin Panel - Manage Students</h3>
+<input type="text" id="adminName" placeholder="Enter Student Name"><br>
+<input type="text" id="adminRoll" placeholder="Enter Roll Number"><br>
+<input type="text" id="adminMarks" placeholder="Enter Marks (e.g. 50/100)"><br>
+<input type="text" id="adminGrade" placeholder="Enter Grade (e.g. A)"><br>
+<button onclick="addStudent()">Add Student</button>
+<button class="remove-btn" onclick="removeStudent()">Remove Student</button><br>
+<button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+<p id="adminMsg"></p>
+</div>
+
+<!-- About Section -->
+<div class="about">
+<h2>About M. M. Public School Mundeshwari</h2>
+<p>We are committed to academic excellence, moral values, and holistic development. Our school nurtures young minds with modern facilities, expert teachers, and extracurricular opportunities.</p>
+</div>
+
+<script>
+let results = JSON.parse(localStorage.getItem("results")) || {};
+function saveResults(){ localStorage.setItem("results", JSON.stringify(results)); }
+
+// Admin Login
+function loginAdmin(){
+  let user=document.getElementById("loginUser").value.trim();
+  let pass=document.getElementById("loginPass").value.trim();
+  let msg=document.getElementById("loginMsg");
+  if(user==="pksss" && pass==="654321"){
+    document.getElementById("adminPanel").style.display="block";
+    document.getElementById("adminLoginDiv").style.display="none";
+    msg.innerHTML="<span class='success'>✅ Login Successful</span>";
+    document.getElementById("loginUser").value="";
+    document.getElementById("loginPass").value="";
+  } else { msg.innerHTML="<span class='error'>❌ Invalid Username or Password</span>"; }
+}
+
+// Logout
+function logoutAdmin(){
+  document.getElementById("adminPanel").style.display="none";
+  document.getElementById("adminLoginDiv").style.display="block";
+  document.getElementById("loginMsg").innerHTML="";
+  document.getElementById("loginUser").value="";
+  document.getElementById("loginPass").value="";
+}
+
+// Add student
+function addStudent(){
+  let name=document.getElementById("adminName").value.trim();
+  let roll=document.getElementById("adminRoll").value.trim();
+  let marks=document.getElementById("adminMarks").value.trim();
+  let grade=document.getElementById("adminGrade").value.trim();
+  if(!name||!roll||!marks||!grade){ alert("Fill all fields"); return; }
+  results[roll]={name,marks,grade};
+  saveResults();
+  document.getElementById("adminMsg").innerText="✅ Student added successfully!";
+  document.getElementById("adminName").value=""; document.getElementById("adminRoll").value="";
+  document.getElementById("adminMarks").value=""; document.getElementById("adminGrade").value="";
+}
+
+// Remove student
+function removeStudent(){
+  let roll=document.getElementById("adminRoll").value.trim();
+  if(!roll){ alert("Enter Roll Number to remove"); return; }
+  if(results[roll]){
+    delete results[roll];
+    saveResults();
+    document.getElementById("adminMsg").innerText="✅ Student removed successfully!";
+    document.getElementById("adminName").value=""; document.getElementById("adminRoll").value="";
+    document.getElementById("adminMarks").value=""; document.getElementById("adminGrade").value="";
+  } else { document.getElementById("adminMsg").innerText="❌ Student not found"; }
+}
+
+// Check Result
+function checkResult(){
+  let name=document.getElementById("studentName").value.trim().toLowerCase();
+  let roll=document.getElementById("rollNumber").value.trim();
+  let box=document.getElementById("resultBox");
+  if(!name&&!roll){ box.innerHTML="<p class='error'>⚠️ Enter Name and Roll Number</p>"; return; }
+  if(!name){ box.innerHTML="<p class='error'>⚠️ Enter Name</p>"; return; }
+  if(!roll){ box.innerHTML="<p class='error'>⚠️ Enter Roll Number</p>"; return; }
+  if(results[roll]&&results[roll].name.toLowerCase()===name){
+    box.innerHTML=`<div class="card"><h3>${results[roll].name}</h3>
+    <p><strong>Roll No:</strong> ${roll}</p>
+    <p><strong>Marks:</strong> ${results[roll].marks}</p>
+    <p><strong>Grade:</strong> ${results[roll].grade}</p></div>`;
+  } else { box.innerHTML="<p class='error'>❌ Result not found! Check Name & Roll No.</p>"; }
+}
+
+// Download Admit Card PDF
+async function downloadAdmit(){
+  let name=document.getElementById("admitName").value.trim();
+  let roll=document.getElementById("admitRoll").value.trim();
+  let box=document.getElementById("admitBox");
+  if(!name&&!roll){ box.innerHTML="<p class='error'>⚠️ Enter Name and Roll Number</p>"; return; }
+  if(!name){ box.innerHTML="<p class='error'>⚠️ Enter Name</p>"; return; }
+  if(!roll){ box.innerHTML="<p class='error'>⚠️ Enter Roll Number</p>"; return; }
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFontSize(18); doc.text("M. M. Public School Mundeshwari",20,20);
+  doc.setFontSize(14); doc.text("Admit Card",20,35);
+  doc.setFontSize(12);
+  doc.text(`Name: ${name}`,20,55);
+  doc.text(`Roll No: ${roll}`,20,70);
+  doc.text("Exam Date: 10th Oct 2025",20,85);
+  doc.text("Venue: School Main Hall",20,100);
+  doc.setFontSize(10); doc.text(`Generated: ${new Date().toLocaleString()}`,20,120);
+  doc.save(`${name}_AdmitCard.pdf`);
+  box.innerHTML="<p class='success'>✅ Admit Card downloaded successfully!</p>";
+}
+</script>
+
+</body>
+</html>
